@@ -152,6 +152,23 @@ class TestTodos(unittest.TestCase):
         self.assertEqual(amended_post_response.status_code, 200, "OK")
         print("Passed")
 
+
+    # Test: POST /todos/:id   - case of invalid data
+    def test_post_todos_withID_InvalidData(self):
+        deleteOp()
+        print("*" * 30 + " test_post_todos_withID_InvalidData " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Post test with ID", "doneStatus": False, "description": "initial post"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "Created")
+        # amend a specific instances of todo using a id with a body containing the fields to amend
+        amended_todo = {"title": "Invalid Amended Post test with ID", "doneStatus": "True", "description": "amended post"}
+        amended_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"], headers=headers, data=json.dumps(amended_todo))
+        self.assertEqual(amended_post_response.status_code, 400, "Bad Request")
+        print("Passed")
+
     
     # Test: POST /todos/:id - case of invalid id
     def test_post_todos_with_InvalidID(self):
@@ -184,6 +201,23 @@ class TestTodos(unittest.TestCase):
         amended_todo = {"title": "Amended Put test with ID", "doneStatus": True, "description": "put test"}
         amended_post_response = requests.put("http://localhost:4567/todos/" + post_response_body["id"], headers=headers, data=json.dumps(amended_todo))
         self.assertEqual(amended_post_response.status_code, 200, "OK")
+        print("Passed")
+
+
+    # Test: PUT /todos/:id   - case of invalid data
+    def test_put_todos_withID_InvalidData(self):
+        deleteOp()
+        print("*" * 30 + " test_put_todos_withID_InvalidData " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Put test with ID", "doneStatus": False, "description": "initial post"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "Created")
+        # amend a specific instances of todo using a id with a body containing the fields to amend using put
+        amended_todo = {"title": "Invalid Amended Put test with ID", "doneStatus": "True", "description": "put test"}
+        amended_post_response = requests.put("http://localhost:4567/todos/" + post_response_body["id"], headers=headers, data=json.dumps(amended_todo))
+        self.assertEqual(amended_post_response.status_code, 400, "Bad Request")
         print("Passed")
 
     
@@ -262,9 +296,9 @@ class TestTodos(unittest.TestCase):
         post_response = requests.post(url, headers=headers, data=json.dumps(todo))
         post_response_body = post_response.json()
         response = requests.head("http://localhost:4567/todos/" + post_response_body["id"] + "100" + "/categories")
-        self.assertEqual(response.status_code, 200, "OK")
-        self.assertEqual(response.headers["Content-Type"], "application/json")
-        self.assertEqual(response.headers["Transfer-Encoding"], "chunked")
+        self.assertEqual(response.status_code, 404, "Not Found")
+        #self.assertEqual(response.headers["Content-Type"], "application/json")
+        #self.assertEqual(response.headers["Transfer-Encoding"], "chunked")
         print("Passed")
 
     
@@ -284,6 +318,23 @@ class TestTodos(unittest.TestCase):
         self.assertEqual(category_post_response.status_code, 201, "created")
         print("Passed")
 
+
+    # Test: POST /todos/:id/categories - case of invalid category data
+    def test_post_todos_withID_InvalidCategories(self):
+        deleteOp()
+        print("*" * 30 + " test_post_todos_withID_InvalidCategories " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Post test with ID & Invalid categories", "doneStatus": False, "description": "post test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        category_items = {"title_name": "category x", "description": "post test"}
+        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", headers=headers, data=json.dumps(category_items))
+        self.assertEqual(category_post_response.status_code, 400, "bad request")
+        print("Passed")
+
     
     # Test: POST /todos/:id/categories - case of invalid id
     def test_post_todos_with_InvalidID_categories(self):
@@ -297,7 +348,7 @@ class TestTodos(unittest.TestCase):
         self.assertEqual(post_response.status_code, 201, "created")
 
         category_items = {"title": "category x", "description": "post test"}
-        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "10" + "/categories", headers=headers, data=json.dumps(category_items))
+        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "100" + "/categories", headers=headers, data=json.dumps(category_items))
         self.assertEqual(category_post_response.status_code, 404, "Not found")
         print("Passed")
 
@@ -342,7 +393,7 @@ class TestTodos(unittest.TestCase):
         category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", headers=headers, data=json.dumps(category_items))
         self.assertEqual(category_post_response.status_code, 201, "created")
 
-        get_response = requests.get("http://localhost:4567/todos/" + post_response_body["id"] + "700" + "/categories")
+        get_response = requests.get("http://localhost:4567/todos/" + post_response_body["id"] + "$700" + "/categories")
         self.assertEqual(get_response.status_code, 404, "Not found")
         print("Passed")
 
@@ -359,10 +410,12 @@ class TestTodos(unittest.TestCase):
         self.assertEqual(post_response.status_code, 201, "created")
 
         category_items = {"title": "category x", "description": "delete test"}
-        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", headers=headers, data=json.dumps(category_items))
+        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", 
+            headers=headers, data=json.dumps(category_items))
         self.assertEqual(category_post_response.status_code, 201, "created")
 
-        delete_response = requests.delete("http://localhost:4567/todos/" + post_response_body["id"] + "/categories/" + category_post_response.json()["id"])
+        delete_response = requests.delete("http://localhost:4567/todos/" + post_response_body["id"] + "/categories/" 
+            + category_post_response.json()["id"])
         self.assertEqual(delete_response.status_code, 200, "OK")
         print("Passed")
 
@@ -379,19 +432,20 @@ class TestTodos(unittest.TestCase):
         self.assertEqual(post_response.status_code, 201, "created")
 
         category_items = {"title": "category x", "description": "delete test"}
-        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", headers=headers, data=json.dumps(category_items))
+        category_post_response = requests.post("http://localhost:4567/todos/" + post_response_body["id"] + "/categories", 
+            headers=headers, data=json.dumps(category_items))
         self.assertEqual(category_post_response.status_code, 201, "created")
 
-        delete_response = requests.delete("http://localhost:4567/todos/" + post_response_body["id"] + " 80" + "/categories/" + category_post_response.json()["id"] + "10")
+        delete_response = requests.delete("http://localhost:4567/todos/" + post_response_body["id"] + " 80" 
+            + "/categories/" + category_post_response.json()["id"] + "10")
         self.assertEqual(delete_response.status_code, 404, "not found")
         print("Passed")
 
     
     # Test: GET todos/:id/taskof
-    # Error: return 404 - NOT FOUND
-    def test_get_todos_id_taskof(self):
+    def test_get_todos_id_tasksof(self):
         deleteOp()
-        print("*" * 30 + " test_get_todos_id_taskof " + "*" * 30)
+        print("*" * 30 + " test_get_todos_id_tasksof " + "*" * 30)
         url = "http://localhost:4567/todos"
         headers = {'Content-Type': 'application/json'}
         todo = {"title": "Get test with ID & taskof", "doneStatus": False, "description": "get test"}
@@ -399,17 +453,33 @@ class TestTodos(unittest.TestCase):
         post_response_body = post_response.json()
         self.assertEqual(post_response.status_code, 201, "created")
 
-        get_response = requests.get("http://localhost:4567/todos/" + post_response_body["id"] + "/taskof")
+        get_response = requests.get("http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof")
         #get_response_body = get_response.json()
         self.assertEqual(get_response.status_code, 200, "OK")
         print("Passed")
 
 
-    # Test: HEAD todos/:id/taskof
-    # Error: return 404 - NOT FOUND
-    def test_head_todos_id_taskof(self):
+    # Test: GET todos/:id/taskof  - case of invalid id
+    def test_get_todos_InvalidId_tasksof(self):
         deleteOp()
-        print("*" * 30 + " test_head_todos_id_taskof " + "*" * 30)
+        print("*" * 30 + " test_get_todos_InvalidId_tasksof " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Get test with Invalid ID & taskof", "doneStatus": False, "description": "get test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        get_response = requests.get("http://localhost:4567/todos/" + post_response_body["id"] + "*30" + "/tasksof")
+        #get_response_body = get_response.json()
+        self.assertEqual(get_response.status_code, 404, "not found")
+        print("Passed")
+
+
+    # Test: HEAD todos/:id/taskof
+    def test_head_todos_id_tasksof(self):
+        deleteOp()
+        print("*" * 30 + " test_head_todos_id_tasksof " + "*" * 30)
         url = "http://localhost:4567/todos"
         headers = {'Content-Type': 'application/json'}
         todo = {"title": "HEAD test with ID & taskof", "doneStatus": False, "description": "HEAD test"}
@@ -417,18 +487,35 @@ class TestTodos(unittest.TestCase):
         post_response_body = post_response.json()
         self.assertEqual(post_response.status_code, 201, "created")
 
-        response = requests.head("http://localhost:4567/todos/" + post_response_body["id"] + "/taskof")
+        response = requests.head("http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof")
         self.assertEqual(response.status_code, 200, "OK")
         self.assertEqual(response.headers["Content-Type"], "application/json")
         self.assertEqual(response.headers["Transfer-Encoding"], "chunked")
         print("Passed")
 
+
+    # Test: HEAD todos/:id/taskof  - case of invalid id
+    def test_head_todos_InvalidId_tasksof(self):
+        deleteOp()
+        print("*" * 30 + " test_head_todos_InvalidId_tasksof " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "HEAD test with Invalid ID & taskof", "doneStatus": False, "description": "HEAD test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        response = requests.head("http://localhost:4567/todos/" + post_response_body["id"] + "89000" + "/tasksof")
+        self.assertEqual(response.status_code, 404, "not found")
+        #self.assertEqual(response.headers["Content-Type"], "application/json")
+        #self.assertEqual(response.headers["Transfer-Encoding"], "chunked")
+        print("Passed")
+
     
     # Test: POST todos/:id/taskof
-    # Error: return 404 - NOT FOUND
-    def test_post_todos_id_taskof(self):
+    def test_post_todos_id_tasksof(self):
         deleteOp()
-        print("*" * 30 + " test_post_todos_id_taskof " + "*" * 30)
+        print("*" * 30 + " test_post_todos_id_tasksof " + "*" * 30)
         url = "http://localhost:4567/todos"
         headers = {'Content-Type': 'application/json'}
         todo = {"title": "Post test with ID & taskof", "doneStatus": False, "description": "post test"}
@@ -438,14 +525,115 @@ class TestTodos(unittest.TestCase):
 
         project = {"title": "Post Task Test", "completed": False, "active": True,
                    "description": "This is Post Task test"}
-        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/taskof"
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof"
         post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
         self.assertEqual(post_response.status_code, 201, "created")
         print("Passed")
 
+    
+    # Test: POST todos/:id/taskof  - case of Invalid Data
+    def test_post_todos_id_tasksof_Invalid_Data(self):
+        deleteOp()
+        print("*" * 30 + " test_post_todos_id_tasksof_Invalid_Data " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Post test with ID & taskof with invalid data", "doneStatus": False, "description": "post test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        project = {"title": "Post Task Test", "completed": "False", "active": True,
+                   "description": "This is Post Task test"}
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof"
+        post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
+        self.assertEqual(post_response.status_code, 400, "Bad Request")
+        print("Passed")
+
+
+    # Test: POST todos/:id/taskof  - case of Invalid Data 2
+    def test_post_todos_id_tasksof_Invalid_Data2(self):
+        deleteOp()
+        print("*" * 30 + " test_post_todos_id_tasksof_Invalid_Data2 " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Post test with ID & taskof with invalid data 2", "doneStatus": False, "description": "post test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        project = {"title": "Post Task Test", "isCompleted": False, "active": True,
+                   "description": "This is Post Task test"}
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof"
+        post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
+        self.assertEqual(post_response.status_code, 400, "Bad Request")
+        print("Passed")
+
+
+    # Test: POST todos/:id/taskof - case of invalid id
+    def test_post_todos_InvalidId_tasksof(self):
+        deleteOp()
+        print("*" * 30 + " test_post_todos_InvalidId_tasksof " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Post test with Invalid ID & taskof", "doneStatus": False, "description": "post test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        project = {"title": "Invalid Post Task Test", "completed": False, "active": True,
+                   "description": "This is Post Task test"}
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "680000" + "/tasksof"
+        post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
+        self.assertEqual(post_response.status_code, 404, "not found")
+        print("Passed")
+
 
     # Test: DELETE todos/:id/taskof/:id
-    # Error: return 404 - NOT FOUND
+    def test_delete_todos_id_tasksof(self):
+        deleteOp()
+        print("*" * 30 + " test_delete_todos_id_tasksof " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Delete test with ID & taskof", "doneStatus": False, "description": "delete test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        project = {"title": "Delete Task Test", "completed": False, "active": True,
+                   "description": "This is Delete Task test"}
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof"
+        project_post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
+        project_post_response_body = project_post_response.json()
+        self.assertEqual(project_post_response.status_code, 201, "created")
+
+        delete_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof/" + project_post_response_body["id"]
+        delete_response = requests.delete(delete_url)
+        self.assertEqual(delete_response.status_code, 200, "OK")
+        print("Passed")
+
+
+    # Test: DELETE todos/:id/taskof/:id  - case of invalid id
+    def test_delete_todos_InvalidId_tasksof(self):
+        deleteOp()
+        print("*" * 30 + " test_delete_todos_InvalidId_tasksof " + "*" * 30)
+        url = "http://localhost:4567/todos"
+        headers = {'Content-Type': 'application/json'}
+        todo = {"title": "Delete test with Invalid ID & taskof", "doneStatus": False, "description": "delete test"}
+        post_response = requests.post(url, headers=headers, data=json.dumps(todo))
+        post_response_body = post_response.json()
+        self.assertEqual(post_response.status_code, 201, "created")
+
+        project = {"title": "Invalid Delete Task Test", "completed": False, "active": True,
+                   "description": "This is Delete Task test"}
+        post_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof"
+        project_post_response = requests.post(post_url, headers=headers, data=json.dumps(project))
+        project_post_response_body = project_post_response.json()
+        self.assertEqual(project_post_response.status_code, 201, "created")
+
+        delete_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof/" + project_post_response_body["id"] + "6888"
+        delete_response = requests.delete(delete_url)
+        self.assertEqual(delete_response.status_code, 404, "Not found")
+        print("Passed")
 
 def main():
     unittest.main()
