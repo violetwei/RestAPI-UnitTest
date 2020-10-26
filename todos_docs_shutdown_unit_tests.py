@@ -8,7 +8,7 @@ def deleteOp():
     for body in response.json()['todos']:
         requests.delete("http://localhost:4567/todos/" + body['id'])
 
-class TestTodos(unittest.TestCase):
+class TestTodosDocsShutdown(unittest.TestCase):
     def test_check_content_type_equals_json(self):
         print("*" * 30 + " test_check_content_type_equals_json " + "*" * 30)
         response = requests.get("http://localhost:4567/projects")
@@ -633,6 +633,24 @@ class TestTodos(unittest.TestCase):
         delete_url = "http://localhost:4567/todos/" + post_response_body["id"] + "/tasksof/" + project_post_response_body["id"] + "6888"
         delete_response = requests.delete(delete_url)
         self.assertEqual(delete_response.status_code, 404, "Not found")
+        print("Passed")
+        
+        
+    # Test: /docs
+    def test_docs(self):
+        print("*" * 30 + " test_docs " + "*" * 30)
+        get_url = "http://localhost:4567/docs"
+        get_response = requests.get(get_url)
+        self.assertEqual(get_response.status_code, 200, "OK")
+        print("Passed")
+
+
+    # Test: /shutdown
+    def test_shutdown(self):
+        print("*" * 30 + " test_shutdown " + "*" * 30)
+        get_url = "http://localhost:4567/shutdown"
+        get_response = requests.get(get_url)
+        print(get_response)
         print("Passed")
 
 def main():
